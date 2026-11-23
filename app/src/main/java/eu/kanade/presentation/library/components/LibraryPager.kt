@@ -43,6 +43,16 @@ fun LibraryPager(
     onLongClickManga: (Category, LibraryManga) -> Unit,
     onClickContinueReading: ((LibraryManga) -> Unit)?,
 ) {
+    if (state.pageCount == 0) {
+        LibraryPagerEmptyScreen(
+            searchQuery = searchQuery,
+            hasActiveFilters = hasActiveFilters,
+            contentPadding = contentPadding,
+            onGlobalSearchClicked = onGlobalSearchClicked,
+        )
+        return
+    }
+
     HorizontalPager(
         modifier = Modifier.fillMaxSize(),
         state = state,
