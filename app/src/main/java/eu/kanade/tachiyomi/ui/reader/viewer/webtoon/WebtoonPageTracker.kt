@@ -25,15 +25,18 @@ class WebtoonPageTracker(
     /**
      * Marks the item at [position], the last one whose end is visible, as active.
      */
-    fun onScrolled(position: Int) {
-        val item = items.items.getOrNull(position)
+    fun onScrolled(position: Int, scrolledForward: Boolean = false) {
+        val item = items.items.getOrNull(position) ?: return
+        if (currentPage == item) return
+
+        if (scrolledForward) {
+            recordSkippedChapterEnd(item, position)
+        }
         val allowPreload = checkAllowPreload(item as? ReaderPage)
-        if (item != null && currentPage != item) {
-            currentPage = item
-            when (item) {
-                is ReaderPage -> onPageSelected(item, allowPreload)
-                is ChapterTransition -> onTransitionSelected(item)
-            }
+        currentPage = item
+        when (item) {
+            is ReaderPage -> onPageSelected(item, allowPreload)
+            is ChapterTransition -> onTransitionSelected(item)
         }
     }
 
@@ -42,6 +45,8 @@ class WebtoonPageTracker(
      * screen.
      */
     fun onScrolledBy(dy: Float, firstVisible: Int, lastEndVisible: Int) {
+        onScrolled(lastEndVisible, scrolledForward = dy > 0)
+
         if (abs(dy) > hideThreshold && activity.viewModel.state.value.menuVisible) {
             activity.hideMenu()
         }
@@ -56,6 +61,18 @@ class WebtoonPageTracker(
         val lastItem = items.items.getOrNull(lastEndVisible)
         if (lastItem is ChapterTransition.Next && lastItem.to == null) {
             activity.showMenu()
+        }
+    }
+
+    private fun recordSkippedChapterEnd(item: Any, position: Int) {
+        val previousPage = currentPage as? ReaderPage ?: return
+        val chapter = previousPage.chapter
+        if (chapter.chapter.read || item is ReaderPage && item.chapter == chapter) return
+
+        val lastPage = chapter.pages?.lastOrNull() ?: return
+        val lastPosition = items.items.indexOf(lastPage)
+        if (lastPosition in 0..<position && items.items.indexOf(previousPage) in 0..<lastPosition) {
+            activity.viewModel.onChapterEndScrolled(lastPage)
         }
     }
 

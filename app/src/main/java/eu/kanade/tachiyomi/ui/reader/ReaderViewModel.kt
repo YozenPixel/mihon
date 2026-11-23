@@ -555,6 +555,10 @@ class ReaderViewModel(
         eventChannel.trySend(Event.PageChanged)
     }
 
+    fun onChapterEndScrolled(page: ReaderPage) {
+        recordChapterProgress(page.chapter, page)
+    }
+
     private fun downloadNextChapters() {
         if (downloadAheadAmount == 0) return
         val manga = manga ?: return
@@ -649,6 +653,11 @@ class ReaderViewModel(
         readerChapter.requestedPage = pageIndex
         chapterPageIndex = pageIndex
 
+        recordChapterProgress(readerChapter, page)
+    }
+
+    private fun recordChapterProgress(readerChapter: ReaderChapter, page: Page) {
+        val pageIndex = page.index
         if (incognitoMode || page.status is Page.State.Error) return
 
         val read = readerChapter.chapter.read || readerChapter.pages?.lastIndex == pageIndex

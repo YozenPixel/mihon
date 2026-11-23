@@ -110,7 +110,6 @@ class WebtoonViewer(val activity: ReaderActivity, val isContinuous: Boolean = tr
         recycler.addOnScrollListener(
             object : RecyclerView.OnScrollListener() {
                 override fun onScrolled(recyclerView: RecyclerView, dx: Int, dy: Int) {
-                    onScrolled()
                     tracker.onScrolledBy(
                         dy = dy.toFloat(),
                         firstVisible = layoutManager.findFirstVisibleItemPosition(),
@@ -226,15 +225,11 @@ class WebtoonViewer(val activity: ReaderActivity, val isContinuous: Boolean = tr
         if (position != -1) {
             layoutManager.scrollToPositionWithOffset(position, 0)
             if (layoutManager.findLastEndVisibleItemPosition() == -1) {
-                onScrolled(pos = position)
+                tracker.onScrolled(position)
             }
         } else {
             logcat { "Page $page not found in adapter" }
         }
-    }
-
-    private fun onScrolled(pos: Int? = null) {
-        tracker.onScrolled(pos ?: layoutManager.findLastEndVisibleItemPosition())
     }
 
     /**
